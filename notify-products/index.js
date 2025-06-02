@@ -5,8 +5,6 @@ const bodyParser = require("body-parser");
 const app = express();
 app.use(bodyParser.json());
 
-const admin = require('firebase-admin');
-
 const decodedKey = Buffer.from(process.env.FIREBASE_KEY_B64, 'base64').toString('utf-8');
 const serviceAccount = JSON.parse(decodedKey);
 
