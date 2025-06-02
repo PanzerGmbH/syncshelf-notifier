@@ -1,11 +1,15 @@
 const express = require("express");
 const admin = require("firebase-admin");
 const bodyParser = require("body-parser");
+
 const app = express();
 app.use(bodyParser.json());
 
-// Service Account Key importieren
-const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
+// DAS IST DER ENTSCHEIDENDE TRICK:
+const serviceAccount = JSON.parse(
+  process.env.FIREBASE_KEY.replace(/\\n/g, '\n')
+);
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -30,7 +34,7 @@ app.get("/", async (req, res) => {
   for (const doc of snapshot.docs) {
     const data = doc.data();
     const token = data.fcm_token;
-    const name = data.name ? data.name : "Ein Produkt";
+    const name = data.name ?? "Ein Produkt";
 
     if (!token) continue;
 
@@ -45,14 +49,12 @@ app.get("/", async (req, res) => {
     console.log(`[RAILWAY] Notification gesendet an ${token}`);
   }
 
-  res.send("Benachrichtigungen verarbeitet.");
+  res.send(" Benachrichtigungen verarbeitet.");
 });
-
-module.exports = app;
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Server läuft auf Port ${PORT}`);
+  console.log(` Server läuft auf Port ${PORT}`);
 });
 
 
