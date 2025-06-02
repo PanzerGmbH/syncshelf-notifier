@@ -5,16 +5,15 @@ const bodyParser = require("body-parser");
 const app = express();
 app.use(bodyParser.json());
 
-// DAS IST DER ENTSCHEIDENDE TRICK:
-const decoded = Buffer.from(process.env.FIREBASE_KEY_B64, 'base64').toString('utf-8');
-const serviceAccount = JSON.parse(decoded);
+const admin = require('firebase-admin');
 
-//PEM-Fix hier:
-serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+const decodedKey = Buffer.from(process.env.FIREBASE_KEY_B64, 'base64').toString('utf-8');
+const serviceAccount = JSON.parse(decodedKey);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
+
 
 
 const firestore = admin.firestore();
