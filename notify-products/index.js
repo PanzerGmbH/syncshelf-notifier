@@ -6,9 +6,8 @@ const app = express();
 app.use(bodyParser.json());
 
 // DAS IST DER ENTSCHEIDENDE TRICK:
-const serviceAccount = JSON.parse(
-  process.env.FIREBASE_KEY.replace(/\\n/g, '\n')
-);
+const decoded = Buffer.from(process.env.FIREBASE_KEY_B64, 'base64').toString('utf-8');
+const serviceAccount = JSON.parse(decoded);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -56,6 +55,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(` Server läuft auf Port ${PORT}`);
 });
-
-
-
