@@ -21,7 +21,28 @@ app.get("/ping", (req, res) => {
   res.send("✅ SyncShelf läuft");
 });
 
-// 📣 Haupt-Endpoint – verschickt Notifications
+// 🧪 Test-Route für allgemeine Benachrichtigung
+app.get("/test", async (req, res) => {
+  try {
+    const testToken = "chvTMYglQWGczGis-52m-g:APA91bFk3CDSPAvUJZ9-XyAoaQ29TgKLX7uPisFrfIVfhv1ptWh2i5XMq9eU1aftcDR1_WbvwwaRpuu8bkK0VC9O3ToXaD5cbE_EbBmH1tcFqwqc7bWpEWM";
+
+    await admin.messaging().send({
+      token: testToken,
+      notification: {
+        title: "📣 Test erfolgreich",
+        body: "Der Bledsinn funkt endlich, heast!",
+      },
+    });
+
+    console.log("✅ Test-Benachrichtigung gesendet");
+    res.send("✅ Testnachricht wurde geschickt.");
+  } catch (error) {
+    console.error("❌ Fehler beim Testversand:", error);
+    res.status(500).send("❌ Fehler beim Testversand.");
+  }
+});
+
+// 📣 Haupt-Endpoint – verschickt Notifications für Produkte
 app.get("/", async (req, res) => {
   try {
     const now = new Date();
@@ -32,18 +53,16 @@ app.get("/", async (req, res) => {
     const end = new Date(targetDate.setHours(23, 59, 59, 999));
 
     const snapshot = await firestore.collection("products")
-      .where("expiry_date", ">=", start)
-      .where("expiry_date", "<=", end)
+      .where("expiresAt", ">=", start)
+      .where("expiresAt", "<=", end)
       .get();
 
     console.log(`[RAILWAY] Produkte mit Ablauf in 3 Tagen: ${snapshot.size}`);
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
-      const token = data.fcm_token;
+      const token = "chvTMYglQWGczGis-52m-g:APA91bFk3CDSPAvUJZ9-XyAoaQ29TgKLX7uPisFrfIVfhv1ptWh2i5XMq9eU1aftcDR1_WbvwwaRpuu8bkK0VC9O3ToXaD5cbE_EbBmH1tcFqwqc7bWpEWM";
       const name = data.name ?? "Ein Produkt";
-
-      if (!token) continue;
 
       await admin.messaging().send({
         token: token,
@@ -53,7 +72,7 @@ app.get("/", async (req, res) => {
         },
       });
 
-      console.log(`[RAILWAY] Notification gesendet an ${token}`);
+      console.log(`[RAILWAY] ✅ Notification gesendet: ${name}`);
     }
 
     res.send("✅ Benachrichtigungen verarbeitet.");
