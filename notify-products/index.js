@@ -9,9 +9,13 @@ app.use(bodyParser.json());
 const decoded = Buffer.from(process.env.FIREBASE_KEY_B64, 'base64').toString('utf-8');
 const serviceAccount = JSON.parse(decoded);
 
+//PEM-Fix hier:
+serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
+
 
 const firestore = admin.firestore();
 
