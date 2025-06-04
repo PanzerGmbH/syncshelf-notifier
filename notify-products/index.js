@@ -31,14 +31,17 @@ async function handleNotificationJob() {
 
   console.log(`[RAILWAY] Produkte mit Ablauf in 3 Tagen: ${snapshot.size}`);
   console.log("[RAILWAY] ➕ Gefundene Produkte:");
+
   snapshot.docs.forEach((doc, i) => {
     try {
       const data = doc.data();
       const name = data.name ?? "Unbekannt";
       let expiresAt = "⚠️ Kein gültiger Timestamp";
+
       if (data.expiresAt && typeof data.expiresAt.toDate === "function") {
         expiresAt = data.expiresAt.toDate().toISOString();
       }
+
       console.log(`  ${i + 1}. ${name} – Ablauf: ${expiresAt}`);
     } catch (err) {
       console.error(`❌ Fehler beim Lesen von Dokument ${i + 1}:`, err);
@@ -62,7 +65,13 @@ async function handleNotificationJob() {
           title: "Achtung!",
           body: `${name} läuft in 3 Tagen ab!`,
         },
+        android: {
+          notification: {
+            tag: doc.id,  // <- sorgt dafür, dass jede Notification einzeln erscheint
+          },
+        },
       });
+
       console.log(`[RAILWAY] ✅ Notification gesendet: ${name}`);
     } catch (sendError) {
       console.error(`[RAILWAY] ❌ Fehler beim Senden an ${name}:`, sendError);
