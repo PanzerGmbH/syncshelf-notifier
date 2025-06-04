@@ -2,9 +2,18 @@ const express = require("express");
 const admin = require("firebase-admin");
 const bodyParser = require("body-parser");
 
-const app = express(); // ⬅️ DAS darf nicht fehlen!
-
+const app = express();
 app.use(bodyParser.json());
+
+// 🔐 Firebase Service Account laden (aus Base64)
+const decodedKey = Buffer.from(process.env.FIREBASE_KEY_B64, 'base64').toString('utf-8');
+const serviceAccount = JSON.parse(decodedKey);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+const firestore = admin.firestore();
 
 app.get("/", async (req, res) => {
   try {
@@ -22,21 +31,21 @@ app.get("/", async (req, res) => {
 
     console.log(`[RAILWAY] Produkte mit Ablauf in 3 Tagen: ${snapshot.size}`);
     console.log("[RAILWAY] ➕ Gefundene Produkte:");
-snapshot.docs.forEach((doc, i) => {
-  try {
-    const data = doc.data();
-    const name = data.name ?? "Unbekannt";
-    const expiresAt = data.expiresAt instanceof admin.firestore.Timestamp
-      ? data.expiresAt.toDate().toISOString()
-      : "⚠️ Kein gültiger Timestamp";
+    snapshot.docs.forEach((doc, i) => {
+      try {
+        const data = doc.data();
+        const name = data.name ?? "Unbekannt";
 
-    console.log(`  ${i + 1}. ${name} – Ablauf: ${expiresAt}`);
-  } catch (err) {
-    console.error(`❌ Fehler beim Lesen von Dokument ${i + 1}:`, err);
-  }
-});
+        let expiresAt = "⚠️ Kein gültiger Timestamp";
+        try {
+          expiresAt = data.expiresAt.toDate().toISOString();
+        } catch (_) {}
 
-
+        console.log(`  ${i + 1}. ${name} – Ablauf: ${expiresAt}`);
+      } catch (err) {
+        console.error(`❌ Fehler beim Lesen von Dokument ${i + 1}:`, err);
+      }
+    });
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
@@ -62,4 +71,10 @@ snapshot.docs.forEach((doc, i) => {
     console.error("❌ Fehler bei Verarbeitung:", error);
     res.status(500).send("❌ Interner Fehler beim Verarbeiten.");
   }
+});
+
+// Server starten
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server läuft auf Port ${PORT}`);
 });
