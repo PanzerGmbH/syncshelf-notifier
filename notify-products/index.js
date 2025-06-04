@@ -14,12 +14,20 @@ app.get("/", async (req, res) => {
 
     console.log(`[RAILWAY] Produkte mit Ablauf in 3 Tagen: ${snapshot.size}`);
     console.log("[RAILWAY] ➕ Gefundene Produkte:");
-    snapshot.docs.forEach((doc, i) => {
-      const data = doc.data();
-      const name = data.name ?? "Unbekannt";
-      const expiresAt = data.expiresAt?.toDate()?.toISOString() ?? "kein Datum";
-      console.log(`  ${i + 1}. ${name} – Ablauf: ${expiresAt}`);
-    });
+snapshot.docs.forEach((doc, i) => {
+  try {
+    const data = doc.data();
+    const name = data.name ?? "Unbekannt";
+    const expiresAt = data.expiresAt instanceof admin.firestore.Timestamp
+      ? data.expiresAt.toDate().toISOString()
+      : "⚠️ Kein gültiger Timestamp";
+
+    console.log(`  ${i + 1}. ${name} – Ablauf: ${expiresAt}`);
+  } catch (err) {
+    console.error(`❌ Fehler beim Lesen von Dokument ${i + 1}:`, err);
+  }
+});
+
 
 
     for (const doc of snapshot.docs) {
