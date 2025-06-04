@@ -49,8 +49,13 @@ app.get("/", async (req, res) => {
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
-      const token = data.deviceToken;
       const name = data.name ?? "Ein Produkt";
+      const token = data.deviceToken;
+
+      if (!token || typeof token !== "string" || token.trim() === "") {
+        console.warn(`[RAILWAY] ⚠️ Kein gültiger deviceToken für ${name}, überspringe`);
+        continue;
+      }
 
       try {
         await admin.messaging().send({
