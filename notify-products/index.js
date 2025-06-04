@@ -1,3 +1,11 @@
+const express = require("express");
+const admin = require("firebase-admin");
+const bodyParser = require("body-parser");
+
+const app = express(); // ⬅️ DAS darf nicht fehlen!
+
+app.use(bodyParser.json());
+
 app.get("/", async (req, res) => {
   try {
     const now = new Date();
